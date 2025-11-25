@@ -73,6 +73,13 @@ dokku apps:create content-host
    
    # Mount it to /app/data in the container
    dokku storage:mount content-host /app/data:/var/lib/dokku/data/storage/content-host-data
+   
+   # IMPORTANT: Verify the mount is active
+   dokku storage:report content-host
+   # Should show: Storage run mounts: -v /app/data:/var/lib/dokku/data/storage/content-host-data
+   
+   # Restart the app to ensure mount is active
+   dokku ps:restart content-host
    ```
 
    **Option B: Using a custom path on your VPS**
@@ -83,6 +90,36 @@ dokku apps:create content-host
    
    # Mount it to /app/data in the container
    dokku storage:mount content-host /app/data:/var/lib/content-host
+   
+   # Restart the app to ensure mount is active
+   dokku ps:restart content-host
+   ```
+
+   **Troubleshooting mount issues:**
+   ```bash
+   # 1. Check if mount is configured
+   dokku storage:report content-host
+   
+   # 2. If mount shows but files don't persist, try:
+   # Remove and re-add the mount
+   dokku storage:unmount content-host /app/data
+   dokku storage:mount content-host /app/data:/var/lib/dokku/data/storage/content-host-data
+   dokku ps:restart content-host
+   
+   # 3. Verify mount is working by checking inside container
+   dokku enter content-host
+   # Inside container:
+   touch /app/data/test-mount.txt
+   ls -la /app/data/
+   exit
+   
+   # 4. Check on host - file should appear
+   ls -la /var/lib/dokku/data/storage/content-host-data/
+   # If test-mount.txt appears, mount is working!
+   rm /var/lib/dokku/data/storage/content-host-data/test-mount.txt
+   
+   # 5. If still not working, check Docker inspect
+   docker inspect $(dokku ps:report content-host --format json | jq -r '.[0].container.id') | grep -A 10 Mounts
    ```
 
 3. Set environment variables:
