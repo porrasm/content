@@ -72,11 +72,12 @@ dokku apps:create content-host
    dokku storage:ensure-directory content-host-data
    
    # Mount it to /app/data in the container
-   dokku storage:mount content-host /app/data:/var/lib/dokku/data/storage/content-host-data
+   # IMPORTANT: Format is host-path:container-path (not container:host)
+   dokku storage:mount content-host /var/lib/dokku/data/storage/content-host-data:/app/data
    
    # IMPORTANT: Verify the mount is active
    dokku storage:report content-host
-   # Should show: Storage run mounts: -v /app/data:/var/lib/dokku/data/storage/content-host-data
+   # Should show: Storage run mounts: -v /var/lib/dokku/data/storage/content-host-data:/app/data
    
    # Restart the app to ensure mount is active
    dokku ps:restart content-host
@@ -89,7 +90,8 @@ dokku apps:create content-host
    sudo chown dokku:dokku /var/lib/content-host
    
    # Mount it to /app/data in the container
-   dokku storage:mount content-host /app/data:/var/lib/content-host
+   # IMPORTANT: Format is host-path:container-path (not container:host)
+   dokku storage:mount content-host /var/lib/content-host:/app/data
    
    # Restart the app to ensure mount is active
    dokku ps:restart content-host
@@ -101,9 +103,9 @@ dokku apps:create content-host
    dokku storage:report content-host
    
    # 2. If mount shows but files don't persist, try:
-   # Remove and re-add the mount
+   # Remove and re-add the mount with CORRECT order (host:container)
    dokku storage:unmount content-host /app/data
-   dokku storage:mount content-host /app/data:/var/lib/dokku/data/storage/content-host-data
+   dokku storage:mount content-host /var/lib/dokku/data/storage/content-host-data:/app/data
    dokku ps:restart content-host
    
    # 3. Verify mount is working by checking inside container

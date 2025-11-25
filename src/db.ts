@@ -10,16 +10,45 @@ const dataDir = path.isAbsolute(env.DATA_DIRECTORY)
 
 // Ensure data directory exists
 if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-  console.log(`Created data directory: ${dataDir}`);
+  try {
+    fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
+    console.log(`Created data directory: ${dataDir}`);
+  } catch (error) {
+    console.error(`Failed to create data directory ${dataDir}:`, error);
+    throw error;
+  }
 } else {
   console.log(`Using data directory: ${dataDir}`);
+}
+
+// Check if directory is writable
+try {
+  fs.accessSync(dataDir, fs.constants.W_OK);
+  console.log(`Data directory is writable: ${dataDir}`);
+} catch (error) {
+  console.error(`Data directory is not writable: ${dataDir}`, error);
+  throw new Error(`Data directory ${dataDir} is not writable. Check permissions and mount configuration.`);
 }
 
 const dbPath = path.join(dataDir, "database.db");
 console.log(`Database path: ${dbPath}`);
 
-export const db = new Database(dbPath);
+// Try to create the database with better error handling
+let db: ReturnType<typeof Database>;
+try {
+  db = new Database(dbPath);
+  console.log(`Database opened successfully: ${dbPath}`);
+} catch (error: any) {
+  console.error(`Failed to open database at ${dbPath}:`, error);
+  console.error(`Error code: ${error.code}`);
+  console.error(`Please verify:`);
+  console.error(`1. The mount is configured correctly: dokku storage:report content-host`);
+  console.error(`2. The directory exists and is writable: ${dataDir}`);
+  console.error(`3. The mount order is correct: host-path:container-path`);
+  throw error;
+}
+
+export { db };
 
 // Enable foreign keys
 db.pragma("foreign_keys = ON");
