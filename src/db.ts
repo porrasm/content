@@ -3,13 +3,21 @@ import path from "path";
 import { env } from "./env";
 import fs from "fs";
 
-const dbPath = path.join(env.DATA_DIRECTORY, "database.db");
-const dbDir = path.dirname(dbPath);
+// Ensure DATA_DIRECTORY is an absolute path
+const dataDir = path.isAbsolute(env.DATA_DIRECTORY) 
+  ? env.DATA_DIRECTORY 
+  : path.resolve(process.cwd(), env.DATA_DIRECTORY);
 
 // Ensure data directory exists
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+  console.log(`Created data directory: ${dataDir}`);
+} else {
+  console.log(`Using data directory: ${dataDir}`);
 }
+
+const dbPath = path.join(dataDir, "database.db");
+console.log(`Database path: ${dbPath}`);
 
 export const db = new Database(dbPath);
 

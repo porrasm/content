@@ -9,10 +9,18 @@ import { requireAuth } from "../auth";
 
 const router = express.Router();
 
+// Ensure DATA_DIRECTORY is an absolute path
+const dataDir = path.isAbsolute(env.DATA_DIRECTORY) 
+  ? env.DATA_DIRECTORY 
+  : path.resolve(process.cwd(), env.DATA_DIRECTORY);
+
 // Ensure uploads directory exists
-const uploadsDir = path.join(env.DATA_DIRECTORY, "uploads");
+const uploadsDir = path.join(dataDir, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Created uploads directory: ${uploadsDir}`);
+} else {
+  console.log(`Using uploads directory: ${uploadsDir}`);
 }
 
 // Configure multer for file uploads

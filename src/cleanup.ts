@@ -10,7 +10,12 @@ const expiredImages = db
   .prepare("SELECT id, filename FROM images WHERE expires_at IS NOT NULL AND expires_at < ?")
   .all(now) as Array<{ id: string; filename: string }>;
 
-const uploadsDir = path.join(env.DATA_DIRECTORY, "uploads");
+// Ensure DATA_DIRECTORY is an absolute path
+const dataDir = path.isAbsolute(env.DATA_DIRECTORY) 
+  ? env.DATA_DIRECTORY 
+  : path.resolve(process.cwd(), env.DATA_DIRECTORY);
+
+const uploadsDir = path.join(dataDir, "uploads");
 
 for (const image of expiredImages) {
   const filePath = path.join(uploadsDir, image.filename);

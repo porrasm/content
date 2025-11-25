@@ -103,7 +103,29 @@ dokku config:set content-host \
 ```bash
 # Check mounted directories
 dokku storage:report content-host
+
+# Verify the mount is working by checking inside the container
+dokku enter content-host
+# Inside container:
+ls -la /app/data
+# Should show the directory (may be empty initially)
+# Create a test file:
+echo "test" > /app/data/test.txt
+exit
+
+# Check on host that the file appears:
+ls -la /var/lib/dokku/data/storage/content-host-data/
+# Should see test.txt
+
+# Clean up test file:
+rm /var/lib/dokku/data/storage/content-host-data/test.txt
 ```
+
+   **Troubleshooting:** If data isn't persisting:
+   - Make sure the app was restarted after setting up the mount: `dokku ps:restart content-host`
+   - Check container logs: `dokku logs content-host` - should show "Using data directory: /app/data"
+   - Verify the mount: `dokku storage:report content-host`
+   - Check directory permissions on host: `ls -la /var/lib/dokku/data/storage/content-host-data/`
 
 5. Set domain:
 ```bash
