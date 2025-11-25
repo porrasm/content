@@ -81,6 +81,26 @@
         </div>
       </div>
 
+      <!-- Edit Document Modal -->
+      <div id="edit-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Edit Document</h2>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+          </div>
+          <form id="edit-document-form" class="document-form">
+            <div class="form-group">
+              <label for="edit-doc-content">Content (Markdown)</label>
+              <textarea id="edit-doc-content" rows="15" required></textarea>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div id="welcome" class="welcome">
         <h2>Welcome</h2>
         <p>Please log in to upload images and create documents.</p>

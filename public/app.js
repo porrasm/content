@@ -212,6 +212,7 @@ async function loadDocuments() {
         </div>
         <div class="doc-actions">
           <a href="${doc.url}" target="_blank" class="btn">View</a>
+          <button onclick="editDocument('${doc.id}')" class="btn">Edit</button>
           <button onclick="copyUrl('${doc.url}')" class="btn">Copy Link</button>
           <button onclick="deleteDocument('${doc.id}')" class="btn btn-danger">Delete</button>
         </div>
@@ -221,6 +222,65 @@ async function loadDocuments() {
     console.error("Failed to load documents:", error);
   }
 }
+
+// Edit document
+let editingDocumentId = null;
+
+async function editDocument(id) {
+  editingDocumentId = id;
+  
+  try {
+    const response = await fetch(`/api/documents/id/${id}`);
+    if (!response.ok) throw new Error("Failed to load document");
+    
+    const doc = await response.json();
+    document.getElementById("edit-doc-content").value = doc.content;
+    document.getElementById("edit-modal").style.display = "flex";
+  } catch (error) {
+    showMessage(error.message, "error");
+  }
+}
+
+function closeEditModal() {
+  document.getElementById("edit-modal").style.display = "none";
+  editingDocumentId = null;
+  document.getElementById("edit-doc-content").value = "";
+}
+
+// Edit document form submission
+document.getElementById("edit-document-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  if (!editingDocumentId) return;
+  
+  const content = document.getElementById("edit-doc-content").value;
+  
+  try {
+    const response = await fetch(`/api/documents/${editingDocumentId}/content`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to update document");
+    }
+    
+    showMessage("Document updated successfully", "success");
+    closeEditModal();
+    loadDocuments();
+  } catch (error) {
+    showMessage(error.message, "error");
+  }
+});
+
+// Close modal when clicking outside
+document.getElementById("edit-modal").addEventListener("click", (e) => {
+  if (e.target.id === "edit-modal") {
+    closeEditModal();
+  }
+});
 
 // Delete document
 async function deleteDocument(id) {

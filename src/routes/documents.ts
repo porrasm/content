@@ -95,6 +95,30 @@ router.get("/", requireAuth, (req, res) => {
   );
 });
 
+// Get document by ID (for editing, authorized users only)
+router.get("/id/:id", requireAuth, (req: express.Request, res: express.Response) => {
+  const stmt = db.prepare("SELECT * FROM documents WHERE id = ?");
+  const document = stmt.get(req.params.id) as Document | undefined;
+
+  if (!document) {
+    return res.status(404).json({ error: "Document not found" });
+  }
+
+  if (document.created_by !== req.user!.email) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  res.json({
+    id: document.id,
+    title: document.title,
+    content: document.content,
+    isPrivate: document.is_private === 1,
+    createdAt: new Date(document.created_at).toISOString(),
+    expiresAt: document.expires_at ? new Date(document.expires_at).toISOString() : null,
+    updatedAt: new Date(document.updated_at).toISOString(),
+  });
+});
+
 // Get document by secret link (public or authorized)
 router.get("/:secretLink", optionalAuth, (req: express.Request, res: express.Response) => {
   const stmt = db.prepare("SELECT * FROM documents WHERE secret_link = ?");
@@ -126,6 +150,47 @@ router.get("/:secretLink", optionalAuth, (req: express.Request, res: express.Res
     expiresAt: document.expires_at ? new Date(document.expires_at).toISOString() : null,
     updatedAt: new Date(document.updated_at).toISOString(),
   });
+});
+
+// Update document content only (for editing)
+const updateContentSchema = z.object({
+  content: z.string(),
+});
+
+router.patch("/:id/content", requireAuth, (req: express.Request, res: express.Response) => {
+  try {
+    const data = updateContentSchema.parse(req.body);
+    const stmt = db.prepare("SELECT * FROM documents WHERE id = ?");
+    const document = stmt.get(req.params.id) as Document | undefined;
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    if (document.created_by !== req.user!.email) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const updateStmt = db.prepare(`
+      UPDATE documents
+      SET content = ?,
+          updated_at = ?
+      WHERE id = ?
+    `);
+
+    updateStmt.run(
+      data.content,
+      Date.now(),
+      req.params.id
+    );
+
+    res.json({ success: true });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Invalid input", details: error.issues });
+    }
+    res.status(500).json({ error: "Failed to update document" });
+  }
 });
 
 // Update document
