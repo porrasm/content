@@ -131,8 +131,10 @@ app.get("/documents/:secretLink", optionalAuth, (req, res) => {
   `);
 });
 
-// Serve main app
-app.get("*", optionalAuth, (req, res) => {
+// Serve main app (catch-all route for SPA)
+// In Express 5, use app.use() for catch-all instead of app.get("*")
+app.use(optionalAuth);
+app.use((req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
 });
 
