@@ -112,6 +112,12 @@ dokku domains:set content-host content.porras.club
 
    **Note:** The "No web listeners" warning is normal before deployment. It will be created when you deploy the app.
 
+   **Important:** If you have multiple Dokku apps, make sure each app has its own domain configured. You can check domains with:
+   ```bash
+   dokku domains:report content-host
+   dokku domains:report eink  # or whatever your other app is named
+   ```
+
 6. Deploy:
 ```bash
 git remote add dokku dokku@your-server:content-host
@@ -123,6 +129,9 @@ git push dokku main
 # Install the Let's Encrypt plugin if not already installed
 sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git
 
+# Verify the domain is set correctly
+dokku domains:report content-host
+
 # Enable Let's Encrypt for your app
 dokku letsencrypt:enable content-host
 
@@ -130,7 +139,19 @@ dokku letsencrypt:enable content-host
 dokku letsencrypt:set content-host email your-email@example.com
 ```
 
-   **Important:** Make sure your domain DNS is pointing to your VPS before enabling Let's Encrypt, otherwise the certificate request will fail.
+   **Important:** 
+   - Make sure your domain DNS is pointing to your VPS before enabling Let's Encrypt, otherwise the certificate request will fail.
+   - If you have multiple apps, ensure each app has its own SSL certificate. Dokku will automatically route HTTPS traffic to the correct app based on the domain.
+   - If HTTPS is serving the wrong app, check that the domain is correctly set:
+     ```bash
+     # Check which domains are configured for each app
+     dokku domains:report content-host
+     dokku domains:report eink  # or your other app name
+     
+     # If content.porras.club is assigned to the wrong app, remove it first:
+     dokku domains:clear eink  # or the app that incorrectly has the domain
+     dokku domains:set content-host content.porras.club
+     ```
 
 8. Set up cleanup cron job (optional):
 ```bash

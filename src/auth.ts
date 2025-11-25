@@ -67,16 +67,21 @@ passport.deserializeUser((user: Express.User, done) => {
 });
 
 export function setupAuth(app: express.Application) {
+  // Trust proxy for proper session handling behind reverse proxy (Dokku)
+  app.set("trust proxy", 1);
+
   app.use(
     session({
       secret: sessionSecret,
-      resave: false,
-      saveUninitialized: false,
+      resave: true, // Save session even if not modified (needed for OAuth)
+      saveUninitialized: true, // Save uninitialized sessions (needed for OAuth state)
       cookie: {
-        secure: process.env.NODE_ENV === "production",
+        secure: true, // Always use secure cookies in production (HTTPS)
         httpOnly: true,
+        sameSite: "lax", // Helps with OAuth redirects
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       },
+      name: "session", // Explicit session name
     })
   );
 
@@ -91,9 +96,48 @@ export function setupAuth(app: express.Application) {
 
   app.get(
     "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/login" }),
+    (req, res, next) => {
+      // Log callback for debugging
+      if (req.query.error) {
+        console.error("OAuth error:", req.query.error, req.query.error_description);
+        return res.status(400).send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Authentication Error</title>
+            <link rel="stylesheet" href="/style.css">
+          </head>
+          <body>
+            <div class="container">
+              <h1>Authentication Error</h1>
+              <p>${req.query.error_description || req.query.error}</p>
+              <a href="/auth/google" class="btn">Try Again</a>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+      next();
+    },
+    passport.authenticate("google", { 
+      failureRedirect: "/?error=auth_failed",
+      failureMessage: true 
+    }),
     (req, res) => {
-      res.redirect("/");
+      // Log authentication success for debugging
+      if (req.user) {
+        console.log("User authenticated:", req.user.email);
+      }
+      
+      // Save session explicitly after authentication
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.redirect("/?error=session_failed");
+        }
+        console.log("Session saved successfully");
+        res.redirect("/");
+      });
     }
   );
 
