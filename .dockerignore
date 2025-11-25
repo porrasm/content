@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+*.db
+uploads
+data
+.git
+.gitignore
+README.md
+.env.example
+

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Host</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Content Host</h1>
+      <div id="auth-section">
+        <span id="user-info" style="display: none;">
+          <span id="user-name"></span>
+          <a href="/auth/logout" class="btn btn-secondary">Logout</a>
+        </span>
+        <a href="/auth/google" id="login-btn" class="btn">Login with Google</a>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <div id="dashboard" style="display: none;">
+        <nav class="tabs">
+          <button class="tab-btn active" data-tab="images">Images</button>
+          <button class="tab-btn" data-tab="documents">Documents</button>
+        </nav>
+
+        <div id="images-tab" class="tab-content active">
+          <div class="section-header">
+            <h2>Upload Image</h2>
+          </div>
+          <form id="upload-form" class="upload-form">
+            <div class="form-group">
+              <label for="image-file">Select Image</label>
+              <input type="file" id="image-file" accept="image/*" required>
+            </div>
+            <div class="form-group">
+              <label for="image-expires">Expires At (optional)</label>
+              <input type="datetime-local" id="image-expires">
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+          </form>
+
+          <div class="section-header">
+            <h2>My Images</h2>
+          </div>
+          <div id="images-list" class="images-grid"></div>
+        </div>
+
+        <div id="documents-tab" class="tab-content">
+          <div class="section-header">
+            <h2>Create Document</h2>
+          </div>
+          <form id="document-form" class="document-form">
+            <div class="form-group">
+              <label for="doc-title">Title</label>
+              <input type="text" id="doc-title" required maxlength="200">
+            </div>
+            <div class="form-group">
+              <label for="doc-content">Content (Markdown)</label>
+              <textarea id="doc-content" rows="10" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="doc-private" checked>
+                Private (only authorized users can access)
+              </label>
+            </div>
+            <div class="form-group">
+              <label for="doc-expires">Expires At (optional)</label>
+              <input type="datetime-local" id="doc-expires">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Document</button>
+          </form>
+
+          <div class="section-header">
+            <h2>My Documents</h2>
+          </div>
+          <div id="documents-list" class="documents-list"></div>
+        </div>
+      </div>
+
+      <div id="welcome" class="welcome">
+        <h2>Welcome</h2>
+        <p>Please log in to upload images and create documents.</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
